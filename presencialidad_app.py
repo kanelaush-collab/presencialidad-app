@@ -22,7 +22,7 @@ filtro = df[(df["Mes"] == mes_sel) & (df["CR"] == cr_sel) & (df["Letra"] == letr
 
 # --- Calcular días hábiles según cronograma ---
 if cr_sel == "5 x 1":
-    habiles = filtro[~filtro["Semana"].isin(["sábado","domingo"]) & (filtro["Valor"] != "FL")]
+    habiles = filtro[~filtro["Semana"].isin(["sábado","domingo"]) & ~filtro["Valor"].isin(["FL", "F"])]
 else:
     habiles = filtro[filtro["Valor"] == "T"]
 
