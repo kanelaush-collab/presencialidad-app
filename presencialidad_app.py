@@ -3,6 +3,7 @@ import pandas as pd
 import math
 import gspread
 from google.oauth2.service_account import Credentials
+import calendar
 
 # --- Conectar con Google Sheets ---
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
@@ -63,15 +64,45 @@ c2.metric("Días Hábiles Netos", habiles_netos)
 c3.metric("Objetivo 40%", objetivo)
 c4.metric("Presencialidad Neta", pres_neta)
 
-# --- Registro ---
+# --- Calendario de asistencia ---
 st.subheader("📝 Registrar asistencia")
 nombre = st.text_input("Tu nombre")
-dias_presentes = st.number_input("Días que fuiste presencial este mes", min_value=0, max_value=dias_habiles, step=1)
+
+# Obtener días hábiles del mes como lista de fechas
+dias_habiles_lista = habiles["Fecha"].dt.date.tolist()
+
+# Construir calendario
+st.write("Seleccioná los días que fuiste presencial:")
+cal = calendar.monthcalendar(2026, mes_sel)
+dias_seleccionados = []
+
+dias_semana = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"]
+cols_header = st.columns(7)
+for i, dia in enumerate(dias_semana):
+    cols_header[i].markdown(f"**{dia}**")
+
+for semana in cal:
+    cols = st.columns(7)
+    for i, dia in enumerate(semana):
+        if dia == 0:
+            cols[i].write("")
+        else:
+            from datetime import date
+            fecha = date(2026, mes_sel, dia)
+            if fecha in dias_habiles_lista:
+                key = f"dia_{dia}"
+                if cols[i].checkbox(str(dia), key=key):
+                    dias_seleccionados.append(fecha)
+            else:
+                cols[i].markdown(f"~~{dia}~~")
 
 if st.button("Guardar registro"):
-    if nombre:
-        nueva_fila = [nombre, cr_sel, letra_sel, meses[mes_sel], 2026, int(dias_presentes), dias_habiles, objetivo]
-        sheet.append_row(nueva_fila)
-        st.success(f"✅ Registro guardado para {nombre}!")
-    else:
+    if nombre and dias_seleccionados:
+        for fecha in dias_seleccionados:
+            nueva_fila = [nombre, cr_sel, letra_sel, meses[mes_sel], 2026, str(fecha), dias_habiles, objetivo]
+            sheet.append_row(nueva_fila)
+        st.success(f"✅ Se registraron {len(dias_seleccionados)} días para {nombre}!")
+    elif not nombre:
         st.warning("Por favor ingresá tu nombre.")
+    else:
+        st.warning("Seleccioná al menos un día.")
