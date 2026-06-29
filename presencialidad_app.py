@@ -8,7 +8,7 @@ from google.oauth2.service_account import Credentials
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
 creds = Credentials.from_service_account_info(st.secrets["gcp_service_account"], scopes=scope)
 client = gspread.authorize(creds)
-sheet = client.open_by_key(st.secrets["SHEET_ID"]).sheet1
+sheet = client.open_by_key(st.secrets["gcp_service_account"]["SHEET_ID"]).sheet1
 
 # --- Cargar datos Excel ---
 df = pd.read_excel("tablapresen.xlsx")
