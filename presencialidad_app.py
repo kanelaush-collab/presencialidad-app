@@ -80,6 +80,15 @@ else:
     if st.session_state.es_supervisor:
         st.subheader("👥 Panel del supervisor")
         mes_sel = st.selectbox("Mes", options=list(meses.keys()), format_func=lambda x: meses[x])
+        cr_sel = st.selectbox("Cronograma", options=df["CR"].unique())
+        letra_sel = st.selectbox("Letra", options=df[df["CR"] == cr_sel]["Letra"].unique())
+
+        filtro = df[(df["Mes"] == mes_sel) & (df["CR"] == cr_sel) & (df["Letra"] == letra_sel)]
+        if cr_sel == "5 x 1":
+            habiles = filtro[~filtro["Semana"].isin(["sábado","domingo"]) & ~filtro["Valor"].isin(["FL", "F"])]
+        else:
+            habiles = filtro[filtro["Valor"] == "T"]
+        objetivo_mes = math.ceil(len(habiles) * 0.40)
 
         registros = sheet_registro.get_all_records()
         df_reg = pd.DataFrame(registros) if registros else pd.DataFrame()
@@ -92,9 +101,9 @@ else:
 
             if not df_mes.empty:
                 resumen = df_mes.groupby("Nombre").agg(
-                    Dias_Presentes=("Dias_Presentes", "count"),
-                    Objetivo=("Objetivo_40", "first")
+                    Dias_Presentes=("Dias_Presentes", "count")
                 ).reset_index()
+                resumen["Objetivo"] = objetivo_mes
                 resumen["Cumple"] = resumen["Dias_Presentes"] >= resumen["Objetivo"]
                 resumen["Cumple"] = resumen["Cumple"].map({True: "✅", False: "❌"})
                 st.dataframe(resumen)
